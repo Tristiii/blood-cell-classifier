@@ -1,5 +1,5 @@
 # blood-cell-classifier
-A convolutional neural network that classifies different types of blood cells.
+A convolutional neural network (CNN) that classifies different types of blood cells.
 
 ## 1. Introduction
 
@@ -9,7 +9,7 @@ This model aims to recognize certain types of blood cells based on microscopy of
 
 ## 2. Methods
 
-## 2.1 Dataset
+### 2.1 Dataset
 
 The dataset that was used for training the model is BloodMNIST from the MedMNIST dataset, found in the [following link](https://medmnist.com/).
 
@@ -18,7 +18,7 @@ Distribution of the data:
 - Validation: 1.712.
 - Testing: 3.421.
 
-## 2.2 Model
+### 2.2 Model
 
 The model is an adaptation of the ResNet18 model, further optimized to handle the input and output of BloodMNIST.
 - Input: image with dimensions 3x28x28.

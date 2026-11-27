@@ -58,7 +58,7 @@ for epoch in range(20):
         y_batch = y_batch.squeeze(-1).long()
         y_pred = model(X_batch)
 
-        loss = loss_fn(y_pred, y_batch)
+        loss     = loss_fn(y_pred, y_batch)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
