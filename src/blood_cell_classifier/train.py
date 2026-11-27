@@ -1,4 +1,4 @@
-from models import ResNet18
+from models import DenseNet121
 from utils import get_model
 
 import torch
@@ -10,6 +10,9 @@ from torchvision.transforms import ToTensor
 from torchmetrics import Accuracy, Precision, Recall, F1Score, AUROC
 
 from medmnist import BloodMNIST
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f'Using device: {device}')
 
 # Import datasets
 train_dataset = BloodMNIST(
@@ -36,26 +39,27 @@ test_dataset = BloodMNIST(
 # Create dataloaders
 train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 val_dataloader = DataLoader(val_dataset, batch_size=64, shuffle=True)
-test_dataloader = DataLoader(test_dataset, batch_size=64, shuffle=True)
+test_dataloader = DataLoader(test_dataset, batch_size=64, shuffle=False)
 
 torch.manual_seed(42)
 
 # Creating model
-model = ResNet18()
-loss_fn = nn.CrossEntropyLoss()
+model = DenseNet121().to(device)
+loss_fn = nn.CrossEntropyLoss().to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-accuracy_fn = Accuracy(task='multiclass', num_classes=8)
-precision_fn = Precision(task='multiclass', num_classes=8)
-recall_fn = Recall(task='multiclass', num_classes=8)
-f1_fn = F1Score(task='multiclass', num_classes=8)
-auroc_fn = AUROC(task='multiclass', num_classes=8)
+accuracy_fn = Accuracy(task='multiclass', num_classes=8).to(device)
+precision_fn = Precision(task='multiclass', num_classes=8).to(device)
+recall_fn = Recall(task='multiclass', num_classes=8).to(device)
+f1_fn = F1Score(task='multiclass', num_classes=8).to(device)
+auroc_fn = AUROC(task='multiclass', num_classes=8).to(device)
 
-for epoch in range(20):
+for epoch in range(30):
     model.train()
     total_loss = 0
     for X_batch, y_batch in train_dataloader:
-        y_batch = y_batch.squeeze(-1).long()
+        X_batch = X_batch.to(device)
+        y_batch = y_batch.squeeze(-1).long().to(device)
         y_pred = model(X_batch)
 
         loss     = loss_fn(y_pred, y_batch)
@@ -70,7 +74,8 @@ for epoch in range(20):
     model.eval()
     with torch.inference_mode():
         for X_batch, y_batch in val_dataloader:
-            y_batch = y_batch.squeeze(-1).long()
+            X_batch = X_batch.to(device)
+            y_batch = y_batch.squeeze(-1).long().to(device)
             y_pred = model(X_batch)
 
             accuracy_fn.update(y_pred, y_batch)
@@ -96,7 +101,7 @@ for epoch in range(20):
     auroc_fn.reset()
 
     print(
-        f'Epoch {epoch + 1} | '
+        f'Epoch {epoch} | '
         f'Loss (training): {total_loss:.4f} | '
         f'Accuracy: {accuracy:.1%} | '
         f'Precision: {precision:.1%} | '
@@ -105,5 +110,32 @@ for epoch in range(20):
         f'AUROC: {auroc:.3f}'
     )
 
+with torch.inference_mode():
+    for X_batch, y_batch in test_dataloader:
+        X_batch = X_batch.to(device)
+        y_batch = y_batch.squeeze(-1).long().to(device)
+        y_pred = model(X_batch)
+
+        accuracy_fn.update(y_pred, y_batch)
+        precision_fn.update(y_pred, y_batch)
+        recall_fn.update(y_pred, y_batch)
+        f1_fn.update(y_pred, y_batch)
+        auroc_fn.update(torch.softmax(y_pred, dim=1), y_batch)
+
+test_accuracy = accuracy_fn.compute()
+test_precision = precision_fn.compute()
+test_recall = recall_fn.compute()
+test_f1 = f1_fn.compute()
+test_auroc = auroc_fn.compute()
+
+print(
+    f'Test | '
+    f'Accuracy: {test_accuracy:.1%} | '
+    f'Precision: {test_precision:.1%} | '
+    f'Recall: {test_recall:.1%} | '
+    f'F1: {test_f1:.3f} | '
+    f'AUROC: {test_auroc:.3f}'
+)
+
 # Save state dict of model
-torch.save(model.state_dict(), get_model())
+torch.save(model.state_dict(), get_model() / 'densenet121_state_dict.pth')

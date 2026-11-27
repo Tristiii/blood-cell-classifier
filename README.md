@@ -20,12 +20,12 @@ Distribution of the data:
 
 ### 2.2 Model
 
-The model is an adaptation of the ResNet18 model, further optimized to handle the input and output of BloodMNIST.
+2 models were used for the analysis, adaptations of the ResNet18 and DenseNet121 models, further optimized to handle the input and output of BloodMNIST.
 - Input: image with dimensions 3x28x28.
 - Output: 8 classes.
 
 ## 3. Results
 
-On the validation dataset, the model an accuracy of 91,5%, a precision of 91,5%, recall of 91,5%, F1-score of 0,915 and an AUROC of 0,995 reached after 10 epochs.
-
-The testing dataset has not been implemented yet.
+On the testing dataset, the model resulted in the following metrics after 30 epochs:
+- ResNet18: accuracy of 95,8%, precision of 95,8%, recall of 95,8%, F1-score of 0,958 and AUROC of 0,997.
+- DenseNet121: accuracy of 95,6%, precision of 95,6%, recall of 95,6%, F1-score of 0,956 and AUROC of 0,998.
